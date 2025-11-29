@@ -1,3 +1,9 @@
+## 0.11.0 (2025-11-29)
+
+### Feat
+
+- add application and permission module
+
 ## 0.10.0 (2025-11-25)
 
 ### Feat
