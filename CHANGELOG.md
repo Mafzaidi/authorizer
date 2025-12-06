@@ -1,3 +1,9 @@
+## 0.12.0 (2025-12-07)
+
+### Feat
+
+- assign role and permission to claim token
+
 ## 0.11.0 (2025-11-29)
 
 ### Feat
