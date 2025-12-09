@@ -1,3 +1,9 @@
+## 0.14.2 (2025-12-09)
+
+### Fix
+
+- remove update manifest in release git workflow
+
 ## 0.14.1 (2025-12-09)
 
 ### Fix
