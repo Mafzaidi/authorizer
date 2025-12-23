@@ -51,10 +51,10 @@ func (uc *roleUsecase) Create(ctx context.Context, in *CreateInput) error {
 
 	role := &entity.Role{
 		ID:            idgen.NewUUIDv7(),
-		ApplicationID: in.AppID,
+		ApplicationID: &in.AppID,
 		Code:          in.Code,
 		Name:          in.Name,
-		Description:   in.Description,
+		Description:   &in.Description,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
@@ -79,7 +79,7 @@ func (uc *roleUsecase) GrantPerms(ctx context.Context, roleID string, perms []st
 		return fmt.Errorf("failed: %w", err)
 	}
 
-	app, err := uc.appRepo.GetByID(ctx, role.ApplicationID)
+	app, err := uc.appRepo.GetByID(ctx, *role.ApplicationID)
 	if err != nil {
 		return fmt.Errorf("failed: %w", err)
 	}

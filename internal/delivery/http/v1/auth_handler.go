@@ -19,16 +19,22 @@ type (
 	}
 
 	LoginResponse struct {
-		Username    string   `json:"username"`
-		Fullname    string   `json:"full_name"`
-		Roles       []string `json:"roles"`
-		Permissions []string `json:"permission"`
+		Username    string `json:"username"`
+		Fullname    string `json:"full_name"`
 		AccessToken struct {
 			Type      string    `json:"type"`
 			Token     string    `json:"token"`
 			ExpiresAt time.Time `json:"expires_at"`
 		} `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
+
+		Authorization []Authorization `json:"authorization"`
+	}
+
+	Authorization struct {
+		App         string   `json:"app"`
+		Roles       []string `json:"roles"`
+		Permissions []string `json:"permissions"`
 	}
 )
 
@@ -72,11 +78,19 @@ func (h *AuthHandler) Login() echo.HandlerFunc {
 
 		c.SetCookie(newCookie)
 
+		var authorizations []Authorization
+
+		for _, a := range data.Claims.Authorization {
+			authorizations = append(authorizations, Authorization{
+				App:         a.App,
+				Roles:       a.Roles,
+				Permissions: a.Permissions,
+			})
+		}
+
 		resp := &LoginResponse{
-			Username:    data.Claims.Username,
-			Fullname:    data.User.FullName,
-			Roles:       data.Claims.Roles,
-			Permissions: data.Claims.Permissions,
+			Username: data.Claims.Username,
+			Fullname: data.User.FullName,
 			AccessToken: struct {
 				Type      string    `json:"type"`
 				Token     string    `json:"token"`
@@ -86,7 +100,8 @@ func (h *AuthHandler) Login() echo.HandlerFunc {
 				Token:     data.Token,
 				ExpiresAt: data.Claims.ExpiresAt.Time,
 			},
-			RefreshToken: data.RefreshToken,
+			RefreshToken:  data.RefreshToken,
+			Authorization: authorizations,
 		}
 
 		return response.SuccesHandler(c, &response.Response{

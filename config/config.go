@@ -90,11 +90,8 @@ func GetConfig() *Config {
 		cfg.PostgresDB.Password = getEnvOrDefault("POSTGRES_PASSWORD", cfg.PostgresDB.Password)
 		cfg.PostgresDB.DBName = getEnvOrDefault("POSTGRES_DB_NAME", cfg.PostgresDB.DBName)
 
-		cfg.Redis.Host = getEnvOrDefault("REDIS_DB_HOST", cfg.Redis.Host)
-		cfg.Redis.Port = getEnvOrDefault("REDIS_DB_PORT", cfg.Redis.Port)
-		cfg.Redis.User = getEnvOrDefault("REDIS_USER", cfg.Redis.User)
-		cfg.Redis.Password = getEnvOrDefault("REDIS_PASSWORD", cfg.Redis.Password)
-		cfg.Redis.DBName = getEnvOrDefault("REDIS_DB_NAME", cfg.PostgresDB.DBName)
+		cfg.Redis.Host = getEnvOrDefault("REDIS_HOST", cfg.Redis.Host)
+		cfg.Redis.Port = getEnvOrDefault("REDIS_PORT", cfg.Redis.Port)
 
 		cfg.JWT.Secret = getEnvOrDefault("JWT_SECRET", cfg.JWT.Secret)
 

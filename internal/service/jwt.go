@@ -30,11 +30,6 @@ type UserToken struct {
 	Claims       *middleware.JWTClaims
 }
 
-type RoleInfo struct {
-	ID   string
-	Code string
-}
-
 type jwtService struct {
 	authRepo     repository.AuthRepository
 	userRepo     repository.UserRepository
@@ -65,7 +60,13 @@ func NewJWTService(
 	}
 }
 
-func (s *jwtService) GenerateAccessToken(ctx context.Context, userID, appCode, validToken, secret string) (string, *middleware.JWTClaims, error) {
+func (s *jwtService) GenerateAccessToken(
+	ctx context.Context,
+	userID,
+	appCode,
+	validToken,
+	secret string,
+) (string, *middleware.JWTClaims, error) {
 
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
@@ -81,49 +82,68 @@ func (s *jwtService) GenerateAccessToken(ctx context.Context, userID, appCode, v
 		return validToken, existingClaims, nil
 	}
 
-	var roles []RoleInfo
+	var authorizations []middleware.Authorization
+	var audiences []string
 
-	app, _ := s.appRepo.GetByCode(ctx, appCode)
-	if app != nil {
-		userRoles, _ := s.userRoleRepo.GetRolesByUserAndApp(ctx, user.ID, app.ID)
-
-		roles = make([]RoleInfo, len(userRoles))
-		for i, r := range userRoles {
-			roles[i] = RoleInfo{ID: r.ID, Code: r.Code}
+	globalRoles, _ := s.userRoleRepo.GetGlobalRolesByUser(ctx, user.ID)
+	if len(globalRoles) > 0 {
+		var roles []string
+		for _, r := range globalRoles {
+			roles = append(roles, r.Code)
 		}
+
+		authorizations = append(authorizations, middleware.Authorization{
+			App:         "GLOBAL",
+			Roles:       roles,
+			Permissions: []string{"*"},
+		})
+
+		audiences = append(audiences, "GLOBAL")
 	}
 
-	roleIDs := make([]string, len(roles))
-	roleNames := make([]string, len(roles))
-
-	for i, r := range roles {
-		roleIDs[i] = r.ID
-		roleNames[i] = r.Code
+	apps, err := s.resolveApps(ctx, appCode)
+	if err != nil {
+		return "", nil, err
 	}
 
-	permissions := make([]string, 0)
-
-	if len(roleIDs) > 0 {
-		rolePerms, _ := s.rolePermRepo.GetPermsByRoles(ctx, roleIDs)
-		for _, p := range rolePerms {
-			permissions = append(permissions, p.Code)
+	for _, app := range apps {
+		appRoles, _ := s.userRoleRepo.GetRolesByUserAndApp(ctx, userID, app.ID)
+		if len(appRoles) == 0 {
+			continue
 		}
+
+		roleSet := make(map[string]struct{})
+		permSet := make(map[string]struct{})
+
+		for _, r := range appRoles {
+			roleSet[r.Code] = struct{}{}
+
+			perms, _ := s.rolePermRepo.GetPermsByRole(ctx, r.ID)
+			for _, p := range perms {
+				permSet[p.Code] = struct{}{}
+			}
+		}
+
+		authorizations = append(authorizations, middleware.Authorization{
+			App:         app.Code,
+			Roles:       mapKeys(roleSet),
+			Permissions: mapKeys(permSet),
+		})
+
+		audiences = append(audiences, app.Code)
 	}
 
 	claims := &middleware.JWTClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:   "authorizer-service",
-			Subject:  userID,
-			Audience: []string{app.Code},
-			IssuedAt: jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(
-				time.Now().Add(1 * time.Hour),
-			),
+			Issuer:    "authorizer-service",
+			Subject:   userID,
+			Audience:  audiences,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 		},
-		Username:    user.Username,
-		Email:       user.Email,
-		Roles:       roleNames,
-		Permissions: permissions,
+		Username:      user.Username,
+		Email:         user.Email,
+		Authorization: authorizations,
 	}
 
 	jwtPayload := &JWTpayload{
@@ -172,4 +192,24 @@ func (s *jwtService) validateAccessToken(cookie, secret string) (*middleware.JWT
 		return claims, err
 	}
 	return claims, nil
+}
+
+func (s *jwtService) resolveApps(ctx context.Context, appCode string) ([]*entity.Application, error) {
+	if appCode == "" {
+		return s.appRepo.GetAll(ctx)
+	}
+
+	app, err := s.appRepo.GetByCode(ctx, appCode)
+	if err != nil {
+		return nil, err
+	}
+	return []*entity.Application{app}, nil
+}
+
+func mapKeys(m map[string]struct{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }

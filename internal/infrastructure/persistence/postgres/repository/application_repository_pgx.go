@@ -51,6 +51,30 @@ func (r *appRepositoryPGX) GetByCode(ctx context.Context, code string) (*entity.
 	return scanApp(row)
 }
 
+func (r *appRepositoryPGX) GetAll(ctx context.Context) ([]*entity.Application, error) {
+	query := `
+		SELECT * FROM authorizer_service.applications
+		WHERE deleted_at IS NULL
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var apps []*entity.Application
+	for rows.Next() {
+		app, err := scanApp(rows)
+		if err != nil {
+			return nil, err
+		}
+		apps = append(apps, app)
+	}
+	return apps, rows.Err()
+}
+
 func (r *appRepositoryPGX) Update(ctx context.Context, app *entity.Application) error {
 	query := `
 		UPDATE authorizer_service.applications

@@ -83,11 +83,11 @@ func (h *UserHandler) RegisterUser() echo.HandlerFunc {
 
 func (h *UserHandler) CreateUser() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		claims := middleware.GetUserFromContext(c)
+		// claims := middleware.GetUserFromContext(c)
 
-		if !middleware.HasRole("superadmin", claims.Roles) {
-			return response.ErrorHandler(c, http.StatusForbidden, "Forbidden", "you don't have access to this route")
-		}
+		// if !middleware.HasRole("superadmin", claims.Authorization) {
+		// 	return response.ErrorHandler(c, http.StatusForbidden, "Forbidden", "you don't have access to this route")
+		// }
 
 		req := &RegisterUserRequest{}
 
@@ -116,11 +116,11 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 func (h *UserHandler) GetUserProfile() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := c.Param("id")
-		claims := middleware.GetUserFromContext(c)
+		// claims := middleware.GetUserFromContext(c)
 
-		if !middleware.HasRole("superadmin", claims.Roles) && claims.UserID != userID {
-			return response.ErrorHandler(c, http.StatusForbidden, "Forbidden", "you don't have access to this route")
-		}
+		// if !middleware.HasRole("superadmin", claims.Roles) && claims.UserID != userID {
+		// 	return response.ErrorHandler(c, http.StatusForbidden, "Forbidden", "you don't have access to this route")
+		// }
 
 		user, err := h.userUC.GetDetail(c.Request().Context(), userID)
 		if err != nil {
@@ -149,11 +149,11 @@ func (h *UserHandler) UpdateUserProfile() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := c.Param("id")
 		req := &UpdateUserRequest{}
-		claims := middleware.GetUserFromContext(c)
+		// claims := middleware.GetUserFromContext(c)
 
-		if !middleware.HasRole("superadmin", claims.Roles) && claims.UserID != userID {
-			return response.ErrorHandler(c, http.StatusForbidden, "Forbidden", "you don't have access to this route")
-		}
+		// if !middleware.HasRole("superadmin", claims.Roles) && claims.UserID != userID {
+		// 	return response.ErrorHandler(c, http.StatusForbidden, "Forbidden", "you don't have access to this route")
+		// }
 
 		if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
 			return response.ErrorHandler(c, http.StatusBadRequest, "BadRequest", err.Error())
@@ -182,11 +182,11 @@ func (h *UserHandler) GetUserList() echo.HandlerFunc {
 			return response.ErrorHandler(c, http.StatusBadRequest, "BadRequest", err.Error())
 		}
 
-		claims := middleware.GetUserFromContext(c)
+		// claims := middleware.GetUserFromContext(c)
 
-		if !middleware.HasRole("superadmin", claims.Roles) {
-			return response.ErrorHandler(c, http.StatusForbidden, "Forbidden", "you don't have access to this route")
-		}
+		// if !middleware.HasRole("superadmin", claims.Roles) {
+		// 	return response.ErrorHandler(c, http.StatusForbidden, "Forbidden", "you don't have access to this route")
+		// }
 
 		users, err := h.userUC.GetList(c.Request().Context(), query.Offset, query.Limit)
 		if err != nil {

@@ -3,9 +3,11 @@ package repository
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"localdev.me/authorizer/internal/domain/entity"
 	"localdev.me/authorizer/internal/domain/repository"
+	"localdev.me/authorizer/internal/infrastructure/persistence/postgres/model"
 )
 
 type userRoleRepositoryPGX struct {
@@ -69,6 +71,32 @@ func (r *userRoleRepositoryPGX) Replace(ctx context.Context, userID string, role
 	return tx.Commit(ctx)
 }
 
+func (r *userRoleRepositoryPGX) GetRolesByUser(ctx context.Context, userID string) ([]*entity.Role, error) {
+	query := `
+		SELECT r.id, r.application_id, r.code, r.name, r.description, r.deleted_at
+		FROM authorizer_service.roles r
+		INNER JOIN authorizer_service.user_roles ur ON ur.role_id = r.id
+		WHERE ur.user_id = $1 AND r.deleted_at IS NULL;
+	`
+
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var roles []*entity.Role
+	for rows.Next() {
+		var role entity.Role
+		if err := rows.Scan(&role.ID, &role.ApplicationID, &role.Code, &role.Name, &role.Description, &role.DeletedAt); err != nil {
+			return nil, err
+		}
+		roles = append(roles, &role)
+	}
+
+	return roles, nil
+}
+
 func (r *userRoleRepositoryPGX) GetRolesByUserAndApp(ctx context.Context, userID, appID string) ([]*entity.Role, error) {
 	query := `
 		SELECT r.id, r.application_id, r.code, r.name, r.description, r.deleted_at
@@ -86,13 +114,37 @@ func (r *userRoleRepositoryPGX) GetRolesByUserAndApp(ctx context.Context, userID
 	var roles []*entity.Role
 	for rows.Next() {
 		var role entity.Role
-		if err := rows.Scan(&role.ID, &role.ApplicationID, &role.Code, &role.Name, &role.Description, &role.DeletedAt); err != nil {
+		if err := rows.Scan(
+			&role.ID,
+			&role.ApplicationID,
+			&role.Code,
+			&role.Name,
+			&role.Description,
+			&role.DeletedAt,
+		); err != nil {
 			return nil, err
 		}
 		roles = append(roles, &role)
 	}
 
 	return roles, nil
+}
+
+func (r *userRoleRepositoryPGX) GetGlobalRolesByUser(ctx context.Context, userID string) ([]*entity.Role, error) {
+	query := `
+		SELECT r.id, r.application_id, r.code, r.name, r.description, r.scope, r.deleted_at
+		FROM authorizer_service.roles r
+		INNER JOIN authorizer_service.user_roles ur ON ur.role_id = r.id
+		WHERE ur.user_id = $1 AND r.scope ='GLOBAL' AND r.deleted_at IS NULL;
+	`
+
+	rows, err := r.pool.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return scanRoles(rows)
 }
 
 func (r *userRoleRepositoryPGX) GetUsersByRole(ctx context.Context, roleID string) ([]*entity.User, error) {
@@ -120,4 +172,26 @@ func (r *userRoleRepositoryPGX) GetUsersByRole(ctx context.Context, roleID strin
 	}
 
 	return users, nil
+}
+
+func scanRoles(rows pgx.Rows) ([]*entity.Role, error) {
+	var roles []*entity.Role
+
+	for rows.Next() {
+		var row model.Role
+		if err := rows.Scan(
+			&row.ID,
+			&row.ApplicationID,
+			&row.Code,
+			&row.Name,
+			&row.Description,
+			&row.Scope,
+			&row.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		roles = append(roles, row.ToEntity())
+	}
+
+	return roles, rows.Err()
 }

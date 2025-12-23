@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"localdev.me/authorizer/config"
@@ -39,13 +38,16 @@ func NewAuthUseCase(
 	}
 }
 
-func (uc *authUsecase) Login(ctx context.Context, appCode, email, password, validToken string, cfg *config.Config) (*UserToken, error) {
+func (uc *authUsecase) Login(
+	ctx context.Context,
+	appCode,
+	email,
+	password,
+	validToken string,
+	cfg *config.Config,
+) (*UserToken, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-
-	if appCode == "" {
-		return nil, errors.New("application cannot be empty")
-	}
 
 	if email == "" {
 		return nil, errors.New("email cannot be empty")
@@ -56,7 +58,13 @@ func (uc *authUsecase) Login(ctx context.Context, appCode, email, password, vali
 		return nil, errors.New("email or password is invalid")
 	}
 
-	accessToken, claims, err := uc.jwtSvc.GenerateAccessToken(ctx, user.ID, appCode, validToken, cfg.JWT.Secret)
+	accessToken, claims, err := uc.jwtSvc.GenerateAccessToken(
+		ctx,
+		user.ID,
+		appCode,
+		validToken,
+		cfg.JWT.Secret,
+	)
 	if err != nil {
 		return nil, errors.New("failed to generate access token")
 	}
@@ -81,7 +89,11 @@ func (uc *authUsecase) Login(ctx context.Context, appCode, email, password, vali
 	return token, nil
 }
 
-func (uc *authUsecase) RefreshToken(ctx context.Context, refreshToken string, cfg *config.Config) (string, string, error) {
+func (uc *authUsecase) RefreshToken(
+	ctx context.Context,
+	refreshToken string,
+	cfg *config.Config,
+) (string, string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -94,6 +106,6 @@ func (uc *authUsecase) RefreshToken(ctx context.Context, refreshToken string, cf
 	if err != nil || savedToken != refreshToken {
 		return "", "", errors.New("refresh token mismatch")
 	}
-	fmt.Println(savedToken)
+
 	return "", "", nil
 }

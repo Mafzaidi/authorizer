@@ -3,7 +3,7 @@ SET search_path TO authorizer_service;
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email CITEXT NOT NULL UNIQUE,
+    email public.citext NOT NULL UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
     password TEXT NOT NULL,
     full_name VARCHAR(100),
