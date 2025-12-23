@@ -1,3 +1,9 @@
+## 0.15.1 (2025-12-24)
+
+### Feat
+
+- add roles and permission set to jwt
+
 ## 0.15.0 (2025-12-09)
 
 ### Feat
