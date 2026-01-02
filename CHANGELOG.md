@@ -1,3 +1,9 @@
+## 0.15.2 (2026-01-03)
+
+### Fix
+
+- add global role permission
+
 ## 0.15.1 (2025-12-24)
 
 ### Feat
