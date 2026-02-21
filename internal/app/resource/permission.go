@@ -15,7 +15,7 @@ type Perm struct {
 	Handler        *hdl.PermHandler
 }
 
-func NePerm(db *pgxpool.Pool) *Perm {
+func NewPerm(db *pgxpool.Pool) *Perm {
 	permRepo := repo.NewPermRepositoryPGX(db)
 	appRepo := repo.NewAppRepositoryPGX(db)
 	uc := uc.NewPermUsecase(permRepo, appRepo)

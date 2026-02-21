@@ -63,7 +63,8 @@ func (uc *authUsecase) Login(
 		user.ID,
 		appCode,
 		validToken,
-		cfg.JWT.Secret,
+		cfg.JWT.PrivateKey,
+		cfg.JWT.PublicKey,
 	)
 	if err != nil {
 		return nil, errors.New("failed to generate access token")

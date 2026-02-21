@@ -34,11 +34,11 @@ func JWTAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		token, err := jwt.ParseWithClaims(rawToken, &JWTClaims{}, func(token *jwt.Token) (any, error) {
 
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, echo.ErrUnauthorized
 			}
 
-			return []byte(cfg.JWT.Secret), nil
+			return cfg.JWT.PublicKey, nil
 		})
 
 		if err != nil || !token.Valid {

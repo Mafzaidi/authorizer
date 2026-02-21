@@ -115,10 +115,6 @@ func (uc *userUsecase) GetList(ctx context.Context, limit, offset int) ([]*entit
 		limit = 50
 	}
 
-	if offset == 0 {
-		offset = 10
-	}
-
 	users, err := uc.repo.List(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch users: %w", err)

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"crypto/rsa"
 	"encoding/base64"
 	"errors"
 	"time"
@@ -14,13 +15,13 @@ import (
 )
 
 type JWTService interface {
-	GenerateAccessToken(ctx context.Context, userID, appCode, validToken, secret string) (string, *middleware.JWTClaims, error)
+	GenerateAccessToken(ctx context.Context, userID, appCode, validToken string, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) (string, *middleware.JWTClaims, error)
 	GenerateRefreshToken() (string, error)
 }
 
 type JWTpayload struct {
-	Secret string
-	Claims *middleware.JWTClaims
+	PrivateKey *rsa.PrivateKey
+	Claims     *middleware.JWTClaims
 }
 
 type UserToken struct {
@@ -64,8 +65,9 @@ func (s *jwtService) GenerateAccessToken(
 	ctx context.Context,
 	userID,
 	appCode,
-	validToken,
-	secret string,
+	validToken string,
+	privateKey *rsa.PrivateKey,
+	publicKey *rsa.PublicKey,
 ) (string, *middleware.JWTClaims, error) {
 
 	user, err := s.userRepo.GetByID(ctx, userID)
@@ -75,7 +77,7 @@ func (s *jwtService) GenerateAccessToken(
 
 	var existingClaims *middleware.JWTClaims
 	if validToken != "" {
-		existingClaims, _ = s.validateAccessToken(validToken, secret)
+		existingClaims, _ = s.validateAccessToken(validToken, publicKey)
 	}
 
 	if existingClaims != nil && existingClaims.Email == user.Email {
@@ -147,8 +149,8 @@ func (s *jwtService) GenerateAccessToken(
 	}
 
 	jwtPayload := &JWTpayload{
-		Secret: secret,
-		Claims: claims,
+		PrivateKey: privateKey,
+		Claims:     claims,
 	}
 
 	token, err := s.generateJWT(jwtPayload)
@@ -167,29 +169,36 @@ func (s *jwtService) GenerateRefreshToken() (string, error) {
 func (s *jwtService) generateJWT(pl *JWTpayload) (string, error) {
 
 	token := jwt.NewWithClaims(
-		jwt.SigningMethodHS256,
+		jwt.SigningMethodRS256,
 		pl.Claims,
 	)
-	tokenString, err := token.SignedString([]byte(pl.Secret))
+	tokenString, err := token.SignedString(pl.PrivateKey)
 	if err != nil {
 		return "", err
 	}
 	return tokenString, nil
 }
 
-func (s *jwtService) validateAccessToken(cookie, secret string) (*middleware.JWTClaims, error) {
+func (s *jwtService) validateAccessToken(cookie string, publicKey *rsa.PublicKey) (*middleware.JWTClaims, error) {
 
 	token, err := jwt.ParseWithClaims(cookie, &middleware.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secret), nil
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return publicKey, nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	claims, ok := token.Claims.(*middleware.JWTClaims)
 	if !ok {
 		return claims, errors.New("token invalid")
 	}
 
-	if err != nil || !token.Valid {
-		return claims, err
+	if !token.Valid {
+		return claims, errors.New("token is not valid")
 	}
 	return claims, nil
 }
