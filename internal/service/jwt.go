@@ -15,13 +15,14 @@ import (
 )
 
 type JWTService interface {
-	GenerateAccessToken(ctx context.Context, userID, appCode, validToken string, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) (string, *middleware.JWTClaims, error)
+	GenerateAccessToken(ctx context.Context, userID, appCode, validToken string, privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey, keyID string) (string, *middleware.JWTClaims, error)
 	GenerateRefreshToken() (string, error)
 }
 
 type JWTpayload struct {
 	PrivateKey *rsa.PrivateKey
 	Claims     *middleware.JWTClaims
+	KeyID      string
 }
 
 type UserToken struct {
@@ -68,6 +69,7 @@ func (s *jwtService) GenerateAccessToken(
 	validToken string,
 	privateKey *rsa.PrivateKey,
 	publicKey *rsa.PublicKey,
+	keyID string,
 ) (string, *middleware.JWTClaims, error) {
 
 	user, err := s.userRepo.GetByID(ctx, userID)
@@ -151,6 +153,7 @@ func (s *jwtService) GenerateAccessToken(
 	jwtPayload := &JWTpayload{
 		PrivateKey: privateKey,
 		Claims:     claims,
+		KeyID:      keyID,
 	}
 
 	token, err := s.generateJWT(jwtPayload)
@@ -172,6 +175,10 @@ func (s *jwtService) generateJWT(pl *JWTpayload) (string, error) {
 		jwt.SigningMethodRS256,
 		pl.Claims,
 	)
+
+	// Set kid in token header for JWKS key identification
+	token.Header["kid"] = pl.KeyID
+
 	tokenString, err := token.SignedString(pl.PrivateKey)
 	if err != nil {
 		return "", err
