@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"localdev.me/authorizer/internal/delivery/http/middleware"
-	"localdev.me/authorizer/internal/domain/entity"
-	"localdev.me/authorizer/internal/domain/repository"
+	"github.com/mafzaidi/authorizer/internal/delivery/http/middleware"
+	"github.com/mafzaidi/authorizer/internal/domain/entity"
+	"github.com/mafzaidi/authorizer/internal/domain/repository"
 )
 
 type JWTService interface {
@@ -139,7 +139,7 @@ func (s *jwtService) GenerateAccessToken(
 
 	claims := &middleware.JWTClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "authorizer-service",
+			Issuer:    "authorizer",
 			Subject:   userID,
 			Audience:  audiences,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

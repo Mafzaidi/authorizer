@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"localdev.me/authorizer/internal/usecase/user"
-	"localdev.me/authorizer/pkg/response"
+	"github.com/mafzaidi/authorizer/internal/usecase/user"
+	"github.com/mafzaidi/authorizer/pkg/response"
 )
 
 type (

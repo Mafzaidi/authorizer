@@ -5,8 +5,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	mid "github.com/labstack/echo/v4/middleware"
-	"localdev.me/authorizer/internal/app/resource"
-	"localdev.me/authorizer/internal/delivery/http/middleware"
+	"github.com/mafzaidi/authorizer/internal/app/resource"
+	"github.com/mafzaidi/authorizer/internal/delivery/http/middleware"
 )
 
 func (s *Server) MapHandlers(e *echo.Echo) error {

@@ -7,9 +7,9 @@ import (
 
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
-	"localdev.me/authorizer/config"
+	"github.com/mafzaidi/authorizer/config"
 
-	"localdev.me/authorizer/pkg/response"
+	"github.com/mafzaidi/authorizer/pkg/response"
 )
 
 type contextKey string

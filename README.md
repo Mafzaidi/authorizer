@@ -1,4 +1,4 @@
-# authorizer-service
+# authorizer
 service for handling application authorizing
 
 ## JWT keys (RS256) di Kubernetes

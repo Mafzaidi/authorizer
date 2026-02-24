@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"localdev.me/authorizer/config"
-	"localdev.me/authorizer/internal/delivery/http/middleware"
+	"github.com/mafzaidi/authorizer/config"
+	"github.com/mafzaidi/authorizer/internal/delivery/http/middleware"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 	// Create test claims
 	claims := &middleware.JWTClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "authorizer-service",
+			Issuer:    "authorizer",
 			Subject:   "test-user-123",
 			Audience:  []string{"STACKFORGE-SERVICE"},
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -37,10 +37,10 @@ func main() {
 
 	// Create token
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	
+
 	// Set kid in header
 	token.Header["kid"] = cfg.JWT.KeyID
-	
+
 	// Sign token
 	tokenString, err := token.SignedString(cfg.JWT.PrivateKey)
 	if err != nil {

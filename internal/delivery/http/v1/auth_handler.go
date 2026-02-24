@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"localdev.me/authorizer/config"
-	"localdev.me/authorizer/internal/usecase/auth"
-	"localdev.me/authorizer/pkg/response"
+	"github.com/mafzaidi/authorizer/config"
+	"github.com/mafzaidi/authorizer/internal/usecase/auth"
+	"github.com/mafzaidi/authorizer/pkg/response"
 )
 
 type (
