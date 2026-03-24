@@ -92,7 +92,7 @@ func (h *AuthHandler) Login() echo.HandlerFunc {
 		newCookie := new(http.Cookie)
 		newCookie.Name = "jwt_user_token"
 		newCookie.Value = data.Token
-		// newCookie.HttpOnly = true
+		newCookie.HttpOnly = true
 		newCookie.Secure = true
 		newCookie.SameSite = http.SameSiteNoneMode
 		newCookie.Expires = data.Claims.ExpiresAt.Time
