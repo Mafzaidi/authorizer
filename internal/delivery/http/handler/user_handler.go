@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/mafzaidi/authorizer/internal/delivery/http/middleware"
 	"github.com/mafzaidi/authorizer/internal/infrastructure/logger"
 	"github.com/mafzaidi/authorizer/internal/usecase/user"
 	"github.com/mafzaidi/authorizer/pkg/response"
@@ -139,6 +140,39 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 	}
 }
 
+func (h *UserHandler) GetCurrentUser() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		claims := middleware.GetUserFromContext(c)
+		if claims == nil {
+			return response.ErrorHandler(c, http.StatusUnauthorized, "Unauthorized", "invalid claims")
+		}
+
+		user, err := h.userUC.GetDetail(c.Request().Context(), claims.UserID)
+		if err != nil {
+			h.logger.Warn("Failed to get current user", logger.Fields{
+				"user_id": claims.UserID,
+				"error":   err.Error(),
+			})
+			return response.ErrorHandler(c, http.StatusNotFound, "NotFound", err.Error())
+		}
+
+		resp := &GetUserProfileResponse{
+			ID:          user.ID,
+			Username:    user.Username,
+			Fullname:    user.FullName,
+			PhoneNumber: user.Phone,
+			Email:       user.Email,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
+		}
+
+		return response.SuccesHandler(c, &response.Response{
+			Message: "get current user successfully",
+			Data:    resp,
+		})
+	}
+}
+
 func (h *UserHandler) GetUserProfile() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userID := c.Param("id")
@@ -265,7 +299,7 @@ func (h *UserHandler) GetUserList() echo.HandlerFunc {
 		})
 
 		return response.SuccesHandler(c, &response.Response{
-			Message: "OK",
+			Message: "User list retrieved successfully",
 			Data:    users,
 		})
 
