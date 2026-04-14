@@ -7,5 +7,5 @@ import (
 )
 
 type Usecase interface {
-	Login(ctx context.Context, application, email, password, validToken string, conf *config.Config) (*UserToken, error)
+	Login(ctx context.Context, application, email, password string, conf *config.Config) (*UserToken, error)
 }

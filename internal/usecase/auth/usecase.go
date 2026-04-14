@@ -57,8 +57,7 @@ func (uc *authUsecase) Login(
 	ctx context.Context,
 	appCode,
 	email,
-	password,
-	validToken string,
+	password string,
 	cfg *config.Config,
 ) (*UserToken, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -86,28 +85,6 @@ func (uc *authUsecase) Login(
 			"user_id": user.ID,
 		})
 		return nil, errors.New("email or password is invalid")
-	}
-
-	// Check if we can reuse existing valid token
-	if validToken != "" {
-		existingClaims, err := uc.jwtService.ValidateToken(ctx, validToken, cfg.JWT.PublicKey)
-		if err == nil && existingClaims.Subject == user.ID {
-			// Token is still valid and belongs to this user, reuse it
-			uc.logger.Info("Reusing valid token", service.Fields{
-				"user_id": user.ID,
-				"email":   email,
-			})
-
-			// Convert entity.Claims to middleware.JWTClaims for backward compatibility
-			middlewareClaims := convertToMiddlewareClaims(existingClaims)
-
-			return &UserToken{
-				User:         user,
-				Token:        validToken,
-				RefreshToken: "", // Not generating new refresh token
-				Claims:       middlewareClaims,
-			}, nil
-		}
 	}
 
 	// Build claims using domain service
