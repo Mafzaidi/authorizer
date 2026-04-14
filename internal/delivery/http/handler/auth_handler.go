@@ -75,12 +75,7 @@ func (h *AuthHandler) Login() echo.HandlerFunc {
 			return response.ErrorHandler(c, http.StatusBadRequest, "BadRequest", err.Error())
 		}
 
-		var validToken string
-		if cookie, err := c.Cookie("jwt_user_token"); err == nil {
-			validToken = cookie.Value
-		}
-
-		data, err := h.authUC.Login(c.Request().Context(), req.Application, req.Email, req.Password, validToken, h.cfg)
+		data, err := h.authUC.Login(c.Request().Context(), req.Application, req.Email, req.Password, h.cfg)
 		if err != nil {
 			h.logger.Warn("Login failed", logger.Fields{
 				"email": req.Email,

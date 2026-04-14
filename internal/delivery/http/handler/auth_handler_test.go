@@ -14,22 +14,22 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/mafzaidi/authorizer/internal/delivery/http/middleware"
-	"github.com/mafzaidi/authorizer/internal/infrastructure/config"
 	"github.com/mafzaidi/authorizer/internal/domain/entity"
 	"github.com/mafzaidi/authorizer/internal/infrastructure/auth"
+	"github.com/mafzaidi/authorizer/internal/infrastructure/config"
 	"github.com/mafzaidi/authorizer/internal/infrastructure/logger"
 	authUsecase "github.com/mafzaidi/authorizer/internal/usecase/auth"
 )
 
 // MockAuthUseCase is a mock implementation of auth.Usecase
 type MockAuthUseCase struct {
-	LoginFunc        func(ctx context.Context, appCode, email, password, validToken string, cfg *config.Config) (*authUsecase.UserToken, error)
+	LoginFunc        func(ctx context.Context, appCode, email, password string, cfg *config.Config) (*authUsecase.UserToken, error)
 	RefreshTokenFunc func(ctx context.Context, refreshToken string, cfg *config.Config) (string, string, error)
 }
 
-func (m *MockAuthUseCase) Login(ctx context.Context, appCode, email, password, validToken string, cfg *config.Config) (*authUsecase.UserToken, error) {
+func (m *MockAuthUseCase) Login(ctx context.Context, appCode, email, password string, cfg *config.Config) (*authUsecase.UserToken, error) {
 	if m.LoginFunc != nil {
-		return m.LoginFunc(ctx, appCode, email, password, validToken, cfg)
+		return m.LoginFunc(ctx, appCode, email, password, cfg)
 	}
 	return nil, errors.New("not implemented")
 }
@@ -77,7 +77,7 @@ func TestNewAuthHandler(t *testing.T) {
 func TestAuthHandler_Login_Success(t *testing.T) {
 	// Setup
 	mockAuthUC := &MockAuthUseCase{
-		LoginFunc: func(ctx context.Context, appCode, email, password, validToken string, cfg *config.Config) (*authUsecase.UserToken, error) {
+		LoginFunc: func(ctx context.Context, appCode, email, password string, cfg *config.Config) (*authUsecase.UserToken, error) {
 			return &authUsecase.UserToken{
 				User: &entity.User{
 					ID:       "user-123",
