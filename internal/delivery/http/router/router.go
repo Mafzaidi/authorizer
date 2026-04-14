@@ -104,6 +104,7 @@ func mapUserPublicRoutes(g *echo.Group, h *handler.UserHandler) {
 
 // mapUserPrivateRoutes maps private user routes
 func mapUserPrivateRoutes(g *echo.Group, h *handler.UserHandler) {
+	g.GET("/me", h.GetCurrentUser())
 	g.GET("/:id", h.GetUserProfile())
 	g.GET("", h.GetUserList())
 	g.PATCH("/:id", h.UpdateUserProfile())
