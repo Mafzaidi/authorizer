@@ -1,3 +1,17 @@
+## 1.2.0 (2026-04-14)
+
+### Feat
+
+- add get current authenticated user function
+
+### Fix
+
+- set httponly cookie to true
+
+### Refactor
+
+- redispatch reuse token and always generate fresh token
+
 ## 1.1.1 (2026-03-24)
 
 ## 1.1.0 (2026-02-28)
